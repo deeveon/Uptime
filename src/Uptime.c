@@ -184,8 +184,8 @@ int main(void)
 		Printf("%ld %s", seconds, (seconds == 1) ? SECOND : SECONDS);
 	}
 
+	// If we have nothing else to print, print 0 seconds
 	if (!(days || hours || minutes || seconds)) {
-		// If we have nothing to print, print 0 seconds
 		Printf("0 %s", SECONDS);
 	}
 
