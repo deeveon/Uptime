@@ -10,15 +10,15 @@
 //--------------------------------------------------------------------------------
 // String constants
 //--------------------------------------------------------------------------------
-#define DAY		"day"
-#define HOUR	"hr"
-#define MINUTE	"min"
-#define SECOND	"sec"
+#define DAY				"day"
+#define HOUR			"hr"
+#define MINUTE			"min"
+#define SECOND			"sec"
 
-#define DAYS	"days"
-#define HOURS	"hrs"
-#define MINUTES	"mins"
-#define SECONDS	"secs"
+#define DAYS			"days"
+#define HOURS			"hrs"
+#define MINUTES			"mins"
+#define SECONDS			"secs"
 
 #define CONJUNCTION		"and"
 #define RAM_DISK		"RAM Disk"
@@ -50,7 +50,9 @@
 // Embed version tag into binary
 const char* version = VERSTAG;
 
+//--------------------------------------------------------------------------------
 // Function prototypes
+//--------------------------------------------------------------------------------
 BOOL CheckRequirements(void);
 
 
@@ -68,6 +70,7 @@ int main(void)
 	int 	count = 0;
 	int 	rc = RETURN_OK;
 
+	// Check Kickstart and Workbench versions
 	if (!CheckRequirements())
 		return RETURN_FAIL;
 
