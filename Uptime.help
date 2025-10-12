@@ -1,0 +1,40 @@
+    NAME
+        Uptime - Prints the amount of time the system has been up
+        and running since it was last booted.
+
+    FORMAT
+        Uptime [VERSION] [SHORT]
+
+    TEMPLATE
+        VER=VERSION/S,S=SHORT/S
+
+    PATH
+        C:Uptime
+
+    FUNCTION
+        Uptime is an AmigaOS command line utility that prints the
+        amount of time the system has been up and running since it
+        was last booted.
+
+    OPTIONS
+        The following options allow you to override the default
+        behavior:
+
+        VERSION or VER
+            Outputs the program name, revision and revision date,
+            then exits.
+
+        SHORT or S
+            Outputs the uptime information only without the prefix
+            text (i.e. leading text).
+
+    EXAMPLES
+        1) Output uptime information including the prefix text.
+        
+           1> Uptime
+           Uptime: 1 hr, 27 mins and 48 secs
+
+        2) Output uptime information without the prefix text.
+
+           1> Uptime SHORT
+           3 hrs, 56 mins and 24 secs
