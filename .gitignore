@@ -1,0 +1,27 @@
+# Ignore GitHub & VSCode files
+.github/
+.vscode/
+
+# Ignore release archives
+releases/
+*.lha
+
+# Ignore build artifacts
+*.o
+*.lnk
+*.lst
+*.map
+*.tmp
+
+# Ignore executable files
+Uptime
+
+# Debug files
+*.debug
+
+# Ignore Codecraft files
+*.projecttree
+*.session
+
+# Ignore test results
+*results*
