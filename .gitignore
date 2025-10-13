@@ -7,8 +7,9 @@
 *.session
 
 # SAS/C specific ignores
-#*.debug
-#*.release
+*debug
+*release
+*clean
 
 # Ignore release archives
 releases/
@@ -25,4 +26,5 @@ releases/
 Uptime
 
 # Ignore test results
+test/
 *results*
