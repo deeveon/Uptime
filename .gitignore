@@ -2,6 +2,14 @@
 .github/
 .vscode/
 
+# Ignore Codecraft files
+*.projecttree
+*.session
+
+# SAS/C specific ignores
+#*.debug
+#*.release
+
 # Ignore release archives
 releases/
 *.lha
@@ -15,13 +23,6 @@ releases/
 
 # Ignore executable files
 Uptime
-
-# Debug files
-*.debug
-
-# Ignore Codecraft files
-*.projecttree
-*.session
 
 # Ignore test results
 *results*

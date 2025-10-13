@@ -3,10 +3,10 @@
         and running since it was last booted.
 
     FORMAT
-        Uptime [VERSION] [SHORT]
+        Uptime [VERSION] [VOLUME] [FULL|SHORT] [NOPREFIX]
 
     TEMPLATE
-        VER=VERSION/S,S=SHORT/S
+        VER=VERSION/S,VOL=VOLUME/K,F=FULL/S,S=SHORT/S,NP=NOPREFIX/S
 
     PATH
         C:Uptime
@@ -24,9 +24,29 @@
             Outputs the program name, revision and revision date,
             then exits.
 
+        VOLUME or VOL
+            By default, Uptime uses the creation date/time of the
+            'RAM Disk' volume as the basis for determining the
+            amount of time since last boot. If you've replace the
+            standard AmigaOS RAM Disk with something else with a
+            different volume name, you can use the VOLUME option
+            to use that instead.
+
+        FULL or F
+            Outputs the uptime informatin in more of a full
+            conversational style. e.g. "The system has been running
+            for 4 hrs, 27 mins and 51 secs."
+
+            This option ignores the NOPREFIX option if it is also
+            provided.
+
         SHORT or S
-            Outputs the uptime information only without the prefix
-            text (i.e. leading text).
+            Outputs the uptime information in a shorter, more
+            concise format. e.g "Uptime: 02:16:58:34"
+
+        NOPREFIX or NP
+            Outputs the uptime information without any leading
+            text. e.g. "37 mins and 48 secs"
 
     EXAMPLES
         1) Output uptime information including the prefix text.
@@ -38,3 +58,6 @@
 
            1> Uptime SHORT
            3 hrs, 56 mins and 24 secs
+
+    SEE ALSO
+        INFO

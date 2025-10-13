@@ -1,59 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <proto/dos.h>
 #include <proto/exec.h>
 #include <proto/wb.h>
 
+#include "Uptime.h"
 #include "uptime_rev.h"
-
-//--------------------------------------------------------------------------------
-// String constants
-//--------------------------------------------------------------------------------
-#define DAY				"day"
-#define HOUR			"hr"
-#define MINUTE			"min"
-#define SECOND			"sec"
-
-#define DAYS			"days"
-#define HOURS			"hrs"
-#define MINUTES			"mins"
-#define SECONDS			"secs"
-
-#define CONJUNCTION		"and"
-#define RAM_DISK		"RAM Disk"
-#define STR_PREFIX		"Uptime:"
-
-#define STR_ERR_LOCK_DOS		"Failed to lock DOS list"
-#define STR_ERR_FIND_RAM_DISK	"Failed to find RAM Disk"
-#define STR_KS_TOO_OLD			"This program requires Kickstart 2.04 or higher"
-#define STR_OS_TOO_OLD			"This program requires AmigaOS 2.04 or higher"
-
-//--------------------------------------------------------------------------------
-// Command line template for ReadArgs
-//--------------------------------------------------------------------------------
-#define TEMPLATE		"VER=VERSION/S,S=SHORT/S"
-
-#define OPT_VERSION			0		// Show program version and exit
-#define OPT_SHORT			1		// Short output (i.e. no prefix)
-#define OPT_COUNT 			2
-
-//--------------------------------------------------------------------------------
-// Constants
-//--------------------------------------------------------------------------------
-#define KICKSTART_MIN_VER	37		// Min Kickstart version required (37 = 2.04)
-#define OS_MIN_VER			37		// Min AmigaOS version required (37 = 2.04)
 
 //--------------------------------------------------------------------------------
 // Global variables
 //--------------------------------------------------------------------------------
 // Embed version tag into binary
-const char* version = VERSTAG;
+STRPTR 	version = VERSTAG;
+OutFrmt format = FORMAT_NORMAL;
+BOOL 	prefix = TRUE;
 
 //--------------------------------------------------------------------------------
 // Function prototypes
 //--------------------------------------------------------------------------------
 BOOL CheckRequirements(void);
+struct DateStamp* GetVolumeCreationDate(STRPTR volumeName);
+void PrintTimeDuration(OutFrmt format, long days, long hours, long minutes, long seconds);
 
 
 //--------------------------------------------------------------------------------
@@ -63,18 +32,17 @@ int main(void)
 {
 	struct 	RDArgs*	rdargs;
  	long	opts[OPT_COUNT] = {0};
-	struct 	DosList* doslist;
-	struct 	DateStamp ds, today;
-	BOOL	verbose = TRUE;
+	struct 	DateStamp* creationDate = NULL;
+	struct 	DateStamp* today = NULL;
+	char	volumeName[MAX_VOL_NAME_LEN + 1] = RAM_DISK;	// Default volume to check
 	long	days, hours, minutes, seconds, ticks;
-	int 	count = 0;
 	int 	rc = RETURN_OK;
 
 	// Check Kickstart and Workbench versions
 	if (!CheckRequirements())
 		return RETURN_FAIL;
 
-	// Parse command line arguments
+	// Parse command line arguments 
 	rdargs = ReadArgs(TEMPLATE, opts, NULL);
 	{
 		if (rdargs == NULL) {
@@ -86,42 +54,45 @@ int main(void)
 		// VERSION argument
 		if (opts[OPT_VERSION]) {
 			Printf("%s", VSTRING);
-			FreeArgs(rdargs);
-			// Terminate the program immediately after showing version info
-			exit(RETURN_OK);  
+			rc = RETURN_OK;
+			goto exit;
 		}
 
-		// Determine mode based on arguments received
-		if (opts[OPT_SHORT])	verbose = FALSE;	// Short output (no prefix)
+		// VOLUME argument
+		if (opts[OPT_VOLUME]) {
+			volumeName[0] = '\0'; 							// Clear default value
+			strcpy(volumeName, (char*) opts[OPT_VOLUME]);
+		}
 
-	} // End of ReadArgs section
+		// Determine format based on arguments received
+		if (opts[OPT_SHORT])	format = FORMAT_SHORT;		// Short output (no prefix)
+		if (opts[OPT_FULL])		format = FORMAT_FULL;		// Full output (long prefix)
+		if (opts[OPT_NOPREFIX])	prefix = FALSE;				// No prefix (DD:HH:MM:SS)
 
-	// Lock the DOS list for reading
-	doslist = LockDosList(LDF_VOLUMES | LDF_READ);
-	if (doslist == NULL) {
-		Printf("%s\n", STR_ERR_LOCK_DOS);
+	} // End of argument parsing
+
+	// Get the creation date of the RAM Disk
+	creationDate = GetVolumeCreationDate(volumeName);
+	if (creationDate == NULL) {
+		printf("%s\n", STR_ERR_GET_CREATION);
 		rc = RETURN_FAIL;
 		goto exit;
 	}
 
-	// Find the RAM Disk entry
-	doslist = FindDosEntry(doslist, RAM_DISK, LDF_VOLUMES | LDF_READ);
-	if (doslist == NULL) {
-		Printf("%s\n", STR_ERR_FIND_RAM_DISK);
+	today = malloc(sizeof(struct DateStamp));
+	if (today == NULL) {
+		printf("%s %s\n", STR_ERR_ALLOC_MEM, "DateStamp");
 		rc = RETURN_FAIL;
 		goto exit;
 	}
-
-	// Get the creation date/time of the RAM disk
-	ds = doslist->dol_misc.dol_volume.dol_VolumeDate;
 
 	// Get the current date/time
-	DateStamp(&today);
+	today = DateStamp(today);
 
 	// Calculate the difference
-	days 	= today.ds_Days - ds.ds_Days;
-	minutes = today.ds_Minute - ds.ds_Minute;
-	ticks 	= today.ds_Tick - ds.ds_Tick;
+	days 	= today->ds_Days - creationDate->ds_Days;
+	minutes = today->ds_Minute - creationDate->ds_Minute;
+	ticks 	= today->ds_Tick - creationDate->ds_Tick;
 
 	// Adjust for negative values
 	if (ticks < 0) {
@@ -134,75 +105,175 @@ int main(void)
 		days -= 1;
 	}
 
-	// Calculate seconds and hours
+	// Calculate hours & seconds
 	seconds = ticks / TICKS_PER_SECOND;
-	hours = (minutes / 60);
+	hours 	= minutes / 60;
 	minutes = minutes % 60;
 
-	// Count how many time periods we have to print
+	// Determine which prefix to print (if any)
+	if (format == FORMAT_FULL)
+		Printf("%s ", STR_FULL_PREFIX); // FUll always has a prefix
+	else if (prefix) {
+		Printf("%s ", STR_NORM_PREFIX);
+	}
+
+	// Print the time duration
+	PrintTimeDuration(format, days, hours, minutes, seconds);
+
+	// Put a period at the end of the full format sentence,
+	// otherwise just a newline
+	if (format == FORMAT_FULL)
+		Printf(".\n");
+	else
+		Printf("\n");
+
+exit:
+	// Free the argument list
+	if (rdargs)	FreeArgs(rdargs);
+	if (today)	free(today);
+	if (creationDate) free(creationDate);
+
+	return rc;
+}
+
+
+//--------------------------------------------------------------------------------
+// Outputs the time duration in the specified format to stdout.
+//--------------------------------------------------------------------------------
+void PrintTimeDuration(OutFrmt format, long days, long hours, long minutes, long seconds)
+{
+	int count = 0;
+
+	// Count how many time periods to print
 	if (days) count++;
 	if (hours) count++;
 	if (minutes) count++;
 	if (seconds) count++;
 
-	// Print the prefix
-	if (verbose) 
-		Printf("%s ", STR_PREFIX);
+	// Print the time duration based on the selected format & prefix options
+	switch (format)
+	{
+		case FORMAT_FULL:
+		case FORMAT_NORMAL:
+			// Print days
+			if (days) {
+				Printf("%ld %s", days, (days == 1) ? DAY : DAYS);
+				count--;
+			}
 
-	// Print days
-	if (days) {
-		Printf("%ld %s", days, (days == 1) ? DAY : DAYS);
-		count--;
+			// Print hours
+			if (hours) {
+				// Do we first need to print a comma or a conjunction?
+				if (days && count > 1)
+					Printf(", ");
+				else if (days && count == 1)
+					Printf(" %s ", CONJUNCTION);
+
+				Printf("%ld %s", hours, (hours == 1) ? HOUR : HOURS);
+				count--;
+			}
+
+			// Print minutes
+			if (minutes) {
+				// Do we first need to print a comma or a conjunction?
+				if (days || hours) {
+					if (count > 1)
+						Printf(", ");
+					else if (count == 1)
+						Printf(" %s ", CONJUNCTION);
+				}
+				Printf("%ld %s", minutes, (minutes == 1) ? MINUTE : MINUTES);
+			}
+
+			// Print seconds
+			if (seconds) {
+				// Do we first need to print a conjunction?
+				if (days || hours || minutes)
+					Printf(" %s ", CONJUNCTION);
+				Printf("%ld %s", seconds, (seconds == 1) ? SECOND : SECONDS);
+			}
+
+			// If we have nothing else to print, print 0 seconds
+			if (!(days || hours || minutes || seconds)) {
+				Printf("0 %s", SECONDS);
+			}
+
+			break;
+
+		case FORMAT_SHORT:
+			Printf("%02ld:%02ld:%02ld:%02ld", days, hours, minutes, seconds);
+			break;
+
+		default:
+			// Should never reach here
+			Printf("Invalid format\n");
+			break;
+
+	} // End of switch
+}
+
+
+//--------------------------------------------------------------------------------
+// Gets the creation date of the specified volume name (e.g. "Workbench").
+// Returns a pointer to a DateStamp if successful, otherwise NULL.
+//--------------------------------------------------------------------------------
+struct DateStamp* GetVolumeCreationDate(STRPTR volumeName)
+{
+	struct 	DosList*	dl;
+	struct 	DateStamp* 	ds = NULL;
+	ULONG 	flags = LDF_VOLUMES | LDF_READ;
+
+	// Validate parameters
+	// TODO: Are there any other checks we should do here on the volume name?
+	if (volumeName == NULL) {
+		Printf("%s\n", STR_INV_VOL_NAME);
+		return NULL;
 	}
 
-	// Print hours
-	if (hours) {
-		// Do we first need to print a comma or a conjunction?
-		if (days && count > 1)
-			Printf(", ");
-		else if (days && count == 1)
-			Printf(" %s ", CONJUNCTION);
-
-		Printf("%ld %s", hours, (hours == 1) ? HOUR : HOURS);
-		count--;
+	// Allocate memory for the DosList structure
+	dl = malloc(sizeof(struct DosList));
+	if (dl == NULL) {
+		Printf("%s %s\n", STR_ERR_ALLOC_MEM, "DosList");
+		return NULL;
 	}
 
-	// Print minutes
-	if (minutes) {
-		// Do we first need to print a comma or a conjunction?
-		if (days || hours) {
-			if (count > 1)
-				Printf(", ");
-			else if (count == 1)
-				Printf(" %s ", CONJUNCTION);
-		}
-		Printf("%ld %s", minutes, (minutes == 1) ? MINUTE : MINUTES);
+	// Lock the DOS list for reading
+	dl = LockDosList(flags);
+	if (dl == NULL) {
+		Printf("%s\n", STR_ERR_LOCK_DOS);
+		goto error;
 	}
 
-	// Print seconds
-	if (seconds) {
-		// Do we first need to print a conjunction?
-		if (days || hours || minutes)
-			Printf(" %s ", CONJUNCTION);
-		Printf("%ld %s", seconds, (seconds == 1) ? SECOND : SECONDS);
+	// Find the specified volume entry
+	dl = FindDosEntry(dl, volumeName, flags);
+	if (dl == NULL) {
+		Printf("%s: %s\n", STR_ERR_FIND_VOLUME, volumeName);
+		goto error;
 	}
 
-	// If we have nothing else to print, print 0 seconds
-	if (!(days || hours || minutes || seconds)) {
-		Printf("0 %s", SECONDS);
+	// Allocate memory for the DateStamp structure
+	ds = malloc(sizeof(struct DateStamp));
+	if (ds == NULL) {
+		Printf("%s %s\n", STR_ERR_ALLOC_MEM, "DateStamp");
+		goto error;
 	}
 
-	// New line at the end
-	Printf("\n");
+	// Get the creation date/time of the specified volume
+	*ds = dl->dol_misc.dol_volume.dol_VolumeDate;
 
-exit:
-	// Unlock the DOS list if it's still locked
-	if (doslist) UnLockDosList(LDF_VOLUMES | LDF_READ);
+error:
 
-	// Free the argument list
-	if (rdargs)	FreeArgs(rdargs);
+	// Unlock the DOS list
+	UnLockDosList(flags);
 
-	return rc;
+	// Free the DosList structure
+	if (dl)	free(dl);
+
+	// Return the DateStamp structure or NULL if there was an error
+	if (ds)
+		return ds;
+	else
+		return NULL;
 }
 
 
