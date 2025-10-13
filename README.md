@@ -1,16 +1,19 @@
 # Uptime
 
 An AmigaOS command line utility that prints the amount of time
-the system has been up and running since it was last booted.
+the system has been up and running since it was booted.
 
 ## Requirements
 
-AmigaOS/Kickstart 2.04 or above (m68k only) with the standard
-AmigaOS `Ram Disk` device/volume.
+* AmigaOS/Kickstart 2.04 or above (m68k only)
+* A volume that is created at boot time such as the standard
+  AmigaOS RAM Disk.
 
-Tested Configurations:
+#### Tested Configurations:
 
-* AmigaOS 3.2.3 (V47)
+- AmigaOS 3.2.3 (V47)
+- AmigaOS 3.1 (V40)
+- AmigaOS 2.04 (V37)
 
 ## Installation Instructions
 
