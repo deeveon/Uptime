@@ -14,18 +14,23 @@ typedef enum OutFrmt {
 //--------------------------------------------------------------------------------
 // String constants
 //--------------------------------------------------------------------------------
-#define DAY				"day"
-#define HOUR			"hr"
-#define MINUTE			"min"
-#define SECOND			"sec"
+#define STR_DAY					"day"
+#define STR_HOUR				"hr"
+#define STR_MINUTE				"min"
+#define STR_SECOND				"sec"
 
-#define DAYS			"days"
-#define HOURS			"hrs"
-#define MINUTES			"mins"
-#define SECONDS			"secs"
+#define STR_DAYS				"days"
+#define STR_HOURS				"hrs"
+#define STR_MINUTES				"mins"
+#define STR_SECONDS				"secs"
 
-#define CONJUNCTION				"and"
-#define RAM_DISK				"RAM Disk"
+#define STR_DAY_SHORT			"d"
+#define STR_HOUR_SHORT			"h"
+#define STR_MINUTE_SHORT		"m"
+#define STR_SECOND_SHORT		"s"
+
+#define STR_CONJUNCTION			"and"
+#define STR_RAM_DISK			"RAM Disk"
 #define STR_NORM_PREFIX			"Uptime:"
 #define STR_FULL_PREFIX			"The system has been running for"
 

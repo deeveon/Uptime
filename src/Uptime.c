@@ -34,7 +34,7 @@ int main(void)
  	long	opts[OPT_COUNT] = {0};
 	struct 	DateStamp* creationDate = NULL;
 	struct 	DateStamp* today = NULL;
-	char	volumeName[MAX_VOL_NAME_LEN + 1] = RAM_DISK;	// Default volume to check
+	char	volumeName[MAX_VOL_NAME_LEN + 1] = STR_RAM_DISK;	// Default volume to check
 	long	days, hours, minutes, seconds, ticks;
 	int 	rc = RETURN_OK;
 
@@ -178,7 +178,7 @@ void PrintTimeDuration(OutFrmt format, long days, long hours, long minutes, long
 		case FORMAT_NORMAL:
 			// Print days
 			if (days) {
-				Printf("%ld %s", days, (days == 1) ? DAY : DAYS);
+				Printf("%ld %s", days, (days == 1) ? STR_DAY : STR_DAYS);
 				count--;
 			}
 
@@ -188,9 +188,9 @@ void PrintTimeDuration(OutFrmt format, long days, long hours, long minutes, long
 				if (days && count > 1)
 					Printf(", ");
 				else if (days && count == 1)
-					Printf(" %s ", CONJUNCTION);
+					Printf(" %s ", STR_CONJUNCTION);
 
-				Printf("%ld %s", hours, (hours == 1) ? HOUR : HOURS);
+				Printf("%ld %s", hours, (hours == 1) ? STR_HOUR : STR_HOURS);
 				count--;
 			}
 
@@ -201,28 +201,37 @@ void PrintTimeDuration(OutFrmt format, long days, long hours, long minutes, long
 					if (count > 1)
 						Printf(", ");
 					else if (count == 1)
-						Printf(" %s ", CONJUNCTION);
+						Printf(" %s ", STR_CONJUNCTION);
 				}
-				Printf("%ld %s", minutes, (minutes == 1) ? MINUTE : MINUTES);
+				Printf("%ld %s", minutes, (minutes == 1) ? STR_MINUTE : STR_MINUTES);
 			}
 
 			// Print seconds
 			if (seconds) {
 				// Do we first need to print a conjunction?
 				if (days || hours || minutes)
-					Printf(" %s ", CONJUNCTION);
-				Printf("%ld %s", seconds, (seconds == 1) ? SECOND : SECONDS);
+					Printf(" %s ", STR_CONJUNCTION);
+				Printf("%ld %s", seconds, (seconds == 1) ? STR_SECOND : STR_SECONDS);
 			}
 
 			// If we have nothing else to print, print 0 seconds
 			if (!(days || hours || minutes || seconds)) {
-				Printf("0 %s", SECONDS);
+				Printf("0 %s", STR_SECONDS);
 			}
 
 			break;
 
 		case FORMAT_SHORT:
-			Printf("%02ld:%02ld:%02ld:%02ld", days, hours, minutes, seconds);
+			// Printf("%02ld:%02ld:%02ld:%02ld", days, hours, minutes, seconds);
+			// Printf("%ldd %ldh %ldm %lds", days, hours, minutes, seconds);
+			if (days)
+				Printf("%ld%s ", days, STR_DAY_SHORT);
+			if (hours)
+				Printf("%ld%s ", hours, STR_HOUR_SHORT);
+			if (minutes)
+				Printf("%ld%s ", minutes, STR_MINUTE_SHORT);
+			if (seconds)
+				Printf("%ld%s", seconds, STR_SECOND_SHORT);
 			break;
 
 		default:
