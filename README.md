@@ -12,7 +12,7 @@ the system has been up and running since it was booted.
 #### Tested Configurations:
 
 - AmigaOS 3.2.3 (V47)
-- AmigaOS 3.9 (V45) using Kickstart 3.1 ROM (V40)
+- AmigaOS 3.9 (V45)
 - AmigaOS 3.5 (V44) using Kickstart 3.1 ROM (V40)
 - AmigaOS 3.1 (V40)
 - AmigaOS 2.04 (V37)
@@ -20,8 +20,9 @@ the system has been up and running since it was booted.
 ## Installation Instructions
 
 1. Copy the `Uptime` executable to the `SYS:C` drawer.
-2. Copy the `Uptime.help` file to the `HELP:English/Sys/Commands`
-   drawer (AmigaOS 3.2)
+2. The `Uptime.help` file can be integrated into the AmigaOS 3.2
+   help system by copying it to the `HELP:English/Sys/Commands`
+   drawer. Otherwise, copy it to whatever location you prefer.
 
 ## License
 
@@ -33,8 +34,11 @@ License. See the `LICENSE.txt` file for details.
 The SAS/C 6.58 source code for the application is available on 
 GitHub at https://github.com/deeveon/Uptime.
 
+The included SCOPTIONS file assumes the AmigaOS include files are
+located at `NDK:Include_H`.
+
 ## Version History
 
 | Version | Description
-|---------|-----------------------------------------------
-| 37.1    | Initial version
+|:-------:|-----------------------------------------------
+| 37.1 (WIP)   | Initial version
