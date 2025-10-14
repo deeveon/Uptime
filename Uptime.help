@@ -27,37 +27,45 @@
         VOLUME or VOL
             By default, Uptime uses the creation date/time of the
             'RAM Disk' volume as the basis for determining the
-            amount of time since last boot. If you've replace the
-            standard AmigaOS RAM Disk with something else with a
-            different volume name, you can use the VOLUME option
-            to use that instead.
+            amount of time since last boot. If you have replaced
+            the standard AmigaOS RAM Disk with something else or
+            with a different volume name, you can use the VOLUME
+            option to use that instead.
+            
+            You can get a list of volumes mounted on the system by
+            using the AmigaOS INFO command.
 
         FULL or F
-            Outputs the uptime informatin in more of a full
-            conversational style. e.g. "The system has been running
-            for 4 hrs, 27 mins and 51 secs."
+            Outputs the uptime information in a full conversational
+            style. e.g. "The system has been running for 4 hrs, 27
+            mins and 51 secs."
 
-            This option ignores the NOPREFIX option if it is also
-            provided.
+            This option causes the SHORT and NOPREFIX options to
+            be ignored.
 
         SHORT or S
-            Outputs the uptime information in a shorter, more
-            concise format. e.g "Uptime: 02:16:58:34"
+            Outputs the uptime information in a shorter, more concise
+            format. e.g "Uptime: 02:16:58:34"
 
         NOPREFIX or NP
-            Outputs the uptime information without any leading
-            text. e.g. "37 mins and 48 secs"
+            Outputs the uptime information without any leading text. 
+            e.g. "37 mins and 48 secs"
 
     EXAMPLES
-        1) Output uptime information including the prefix text.
+        1) The default output:
         
            1> Uptime
            Uptime: 1 hr, 27 mins and 48 secs
 
-        2) Output uptime information without the prefix text.
+        2) A shorter more concise output:
 
            1> Uptime SHORT
-           3 hrs, 56 mins and 24 secs
+           Uptime: 00:01:27:48
+
+        3) A more conversational style of output:
+
+           1> Uptime FULL
+           The system has been running for 3 hrs, 5 mins and 10 secs.
 
     SEE ALSO
         INFO
