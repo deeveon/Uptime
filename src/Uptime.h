@@ -34,6 +34,9 @@ typedef enum OutFrmt {
 #define STR_ERR_ALLOC_MEM		"Failed to allocate memory for"
 #define STR_INV_VOL_NAME		"Invalid volume name"
 #define STR_ERR_GET_CREATION	"Failed to get volume creation date"
+#define STR_ERR_GET_CURR_TIME	"Failed to get current date/time"
+#define STR_ERR_VOL_NAME_LEN	"Volume name exceeds the maximum length of"
+#define STR_ERR_VOL_NAME_LEN2	"characters"
 #define STR_KS_TOO_OLD			"This program requires Kickstart 2.04 or higher"
 #define STR_OS_TOO_OLD			"This program requires AmigaOS 2.04 or higher"
 

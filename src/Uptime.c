@@ -60,8 +60,15 @@ int main(void)
 
 		// VOLUME argument
 		if (opts[OPT_VOLUME]) {
+			if (strlen((char*) opts[OPT_VOLUME]) > MAX_VOL_NAME_LEN) {
+				Printf("%s %d %s\n", STR_ERR_VOL_NAME_LEN, MAX_VOL_NAME_LEN, STR_ERR_VOL_NAME_LEN2);
+				rc = RETURN_FAIL;
+				goto exit;
+			}	
+
 			volumeName[0] = '\0'; 							// Clear default value
-			strcpy(volumeName, (char*) opts[OPT_VOLUME]);
+			strncpy(volumeName, (char*) opts[OPT_VOLUME], MAX_VOL_NAME_LEN);
+			volumeName[MAX_VOL_NAME_LEN] = '\0';			// Ensure null-termination
 		}
 
 		// Determine format based on arguments received
@@ -74,20 +81,26 @@ int main(void)
 	// Get the creation date of the RAM Disk
 	creationDate = GetVolumeCreationDate(volumeName);
 	if (creationDate == NULL) {
-		printf("%s\n", STR_ERR_GET_CREATION);
+		Printf("%s\n", STR_ERR_GET_CREATION);
 		rc = RETURN_FAIL;
 		goto exit;
 	}
 
 	today = malloc(sizeof(struct DateStamp));
 	if (today == NULL) {
-		printf("%s %s\n", STR_ERR_ALLOC_MEM, "DateStamp");
+		Printf("%s %s\n", STR_ERR_ALLOC_MEM, "DateStamp");
 		rc = RETURN_FAIL;
 		goto exit;
 	}
 
 	// Get the current date/time
 	today = DateStamp(today);
+
+	if (today == NULL) {
+		Printf("%s\n", STR_ERR_GET_CURR_TIME);
+		rc = RETURN_FAIL;
+		goto exit;
+	}
 
 	// Calculate the difference
 	days 	= today->ds_Days - creationDate->ds_Days;
@@ -105,6 +118,14 @@ int main(void)
 		days -= 1;
 	}
 
+	// If the amount of time is negative for some reason, then
+	// just set everything to zero
+	if (days < 0 || minutes < 0 || ticks < 0) {
+		days = 0;
+		minutes = 0;
+		ticks = 0;
+	}
+
 	// Calculate hours & seconds
 	seconds = ticks / TICKS_PER_SECOND;
 	hours 	= minutes / 60;
@@ -112,7 +133,7 @@ int main(void)
 
 	// Determine which prefix to print (if any)
 	if (format == FORMAT_FULL)
-		Printf("%s ", STR_FULL_PREFIX); // FUll always has a prefix
+		Printf("%s ", STR_FULL_PREFIX); // Full always has a prefix
 	else if (prefix) {
 		Printf("%s ", STR_NORM_PREFIX);
 	}
@@ -230,13 +251,6 @@ struct DateStamp* GetVolumeCreationDate(STRPTR volumeName)
 		return NULL;
 	}
 
-	// Allocate memory for the DosList structure
-	dl = malloc(sizeof(struct DosList));
-	if (dl == NULL) {
-		Printf("%s %s\n", STR_ERR_ALLOC_MEM, "DosList");
-		return NULL;
-	}
-
 	// Lock the DOS list for reading
 	dl = LockDosList(flags);
 	if (dl == NULL) {
@@ -265,9 +279,6 @@ error:
 
 	// Unlock the DOS list
 	UnLockDosList(flags);
-
-	// Free the DosList structure
-	if (dl)	free(dl);
 
 	// Return the DateStamp structure or NULL if there was an error
 	if (ds)
