@@ -12,8 +12,7 @@
 //--------------------------------------------------------------------------------
 // Global variables
 //--------------------------------------------------------------------------------
-// Embed version tag into binary
-STRPTR 	version = VERSTAG;
+STRPTR 	version = VERSTAG;			// Embed version tag into binary
 OutFrmt format = FORMAT_NORMAL;
 BOOL 	prefix = TRUE;
 
@@ -21,6 +20,7 @@ BOOL 	prefix = TRUE;
 // Function prototypes
 //--------------------------------------------------------------------------------
 BOOL CheckRequirements(void);
+BOOL SanitizeVolumeName(char* cleanName, const char* dirtyName);
 struct DateStamp* GetVolumeCreationDate(STRPTR volumeName);
 void PrintTimeDuration(OutFrmt format, long days, long hours, long minutes, long seconds);
 
@@ -60,15 +60,10 @@ int main(void)
 
 		// VOLUME argument
 		if (opts[OPT_VOLUME]) {
-			if (strlen((char*) opts[OPT_VOLUME]) > MAX_VOL_NAME_LEN) {
-				Printf("%s %d %s\n", STR_ERR_VOL_NAME_LEN, MAX_VOL_NAME_LEN, STR_ERR_VOL_NAME_LEN2);
+			if (!SanitizeVolumeName(volumeName, (char*)opts[OPT_VOLUME])) {
 				rc = RETURN_FAIL;
 				goto exit;
-			}	
-
-			volumeName[0] = '\0'; 							// Clear default value
-			strncpy(volumeName, (char*) opts[OPT_VOLUME], MAX_VOL_NAME_LEN);
-			volumeName[MAX_VOL_NAME_LEN] = '\0';			// Ensure null-termination
+			}
 		}
 
 		// Determine format based on arguments received
@@ -81,7 +76,7 @@ int main(void)
 	// Get the creation date of the RAM Disk
 	creationDate = GetVolumeCreationDate(volumeName);
 	if (creationDate == NULL) {
-		Printf("%s\n", STR_ERR_GET_CREATION);
+		// Printf("%s\n", STR_ERR_GET_CREATION);
 		rc = RETURN_FAIL;
 		goto exit;
 	}
@@ -118,12 +113,12 @@ int main(void)
 		days -= 1;
 	}
 
-	// If the amount of time is negative for some reason, then
-	// just set everything to zero
+	// If the amount of time ends up negative for some reason (e.g. clock 
+	// battery is dead), then return an error
 	if (days < 0 || minutes < 0 || ticks < 0) {
-		days = 0;
-		minutes = 0;
-		ticks = 0;
+		Printf("%s\n", STR_ERR_NEGATIVE_UPTIME);
+		rc = RETURN_FAIL;
+		goto exit;
 	}
 
 	// Calculate hours & seconds
@@ -157,6 +152,38 @@ exit:
 	return rc;
 }
 
+
+//--------------------------------------------------------------------------------
+// Sanitizes/validates the specified volume name
+// Returns TRUE if the name is valid after sanitization, FALSE otherwise.
+//--------------------------------------------------------------------------------
+BOOL SanitizeVolumeName(char* cleanName, const char* dirtyName)
+{
+	// Validate parameters
+	if (dirtyName == NULL || strlen(dirtyName) == 0 || 
+		strlen(dirtyName) <= 0 || strlen(dirtyName) > MAX_VOL_NAME_LEN)
+	{
+		Printf("%s\n", STR_ERR_INV_VOL_NAME);
+		return FALSE;
+	}
+
+	if (cleanName == NULL) {
+		Printf("%s: %s\n", STR_ERR_INV_POINTER, "cleanName");
+		return FALSE;
+	}
+
+	// Copy the dirty name to the clean name buffer
+	strncpy(cleanName, dirtyName, MAX_VOL_NAME_LEN);
+	cleanName[MAX_VOL_NAME_LEN] = '\0';				// Ensure null termination
+
+	// ReadArgs already filters out invalid characters, so we don't need to do
+	// that here. Instead, we can just check for a trailing colon & remove it.
+	if (cleanName[strlen(cleanName) - 1] == ':') {
+		cleanName[strlen(cleanName) - 1] = '\0';
+	}
+
+	return TRUE;
+}
 
 //--------------------------------------------------------------------------------
 // Outputs the time duration in the specified format to stdout.
@@ -232,6 +259,11 @@ void PrintTimeDuration(OutFrmt format, long days, long hours, long minutes, long
 				Printf("%ld%s ", minutes, STR_MINUTE_SHORT);
 			if (seconds)
 				Printf("%ld%s", seconds, STR_SECOND_SHORT);
+
+			// If we have nothing else to print, print 0seconds
+			if (!(days || hours || minutes || seconds)) {
+				Printf("0%s", STR_SECOND_SHORT);
+			}
 			break;
 
 		default:
@@ -256,7 +288,7 @@ struct DateStamp* GetVolumeCreationDate(STRPTR volumeName)
 	// Validate parameters
 	// TODO: Are there any other checks we should do here on the volume name?
 	if (volumeName == NULL) {
-		Printf("%s\n", STR_INV_VOL_NAME);
+		Printf("%s\n", STR_ERR_INV_VOL_NAME);
 		return NULL;
 	}
 
@@ -305,13 +337,13 @@ BOOL CheckRequirements(void)
 {
 	// Check Kickstart version
 	if (SysBase->LibNode.lib_Version < KICKSTART_MIN_VER) {
-		Printf("%s\n", STR_KS_TOO_OLD);
+		Printf("%s\n", STR_ERR_KS_TOO_OLD);
 		return FALSE;
 	}
 
 	// Check Workbench version
 	if (WorkbenchBase->lib_Version < OS_MIN_VER) {
-		Printf("%s\n", STR_OS_TOO_OLD);
+		Printf("%s\n", STR_ERR_OS_TOO_OLD);
 		return FALSE;
 	}
 

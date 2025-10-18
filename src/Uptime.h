@@ -30,20 +30,24 @@ typedef enum OutFrmt {
 #define STR_SECOND_SHORT		"s"
 
 #define STR_CONJUNCTION			"and"
-#define STR_RAM_DISK			"RAM Disk"
-#define STR_NORM_PREFIX			"Uptime:"
 #define STR_FULL_PREFIX			"The system has been running for"
+#define STR_NORM_PREFIX			"Uptime:"
+#define STR_RAM_DISK			"RAM Disk"
 
-#define STR_ERR_LOCK_DOS		"Failed to lock DOS list"
-#define STR_ERR_FIND_VOLUME		"Volume not found"
+#define STR_ERR_KS_TOO_OLD		"This program requires Kickstart 2.04 or higher"	// See KICKSTART_MIN_VER below
+#define STR_ERR_OS_TOO_OLD		"This program requires AmigaOS 2.04 or higher"		// See OS_MIN_VER below
+
 #define STR_ERR_ALLOC_MEM		"Failed to allocate memory for"
-#define STR_INV_VOL_NAME		"Invalid volume name"
-#define STR_ERR_GET_CREATION	"Failed to get volume creation date"
+#define STR_ERR_FIND_VOLUME		"Volume not found"
+// #define STR_ERR_GET_CREATION	"Failed to get volume creation date"
 #define STR_ERR_GET_CURR_TIME	"Failed to get current date/time"
-#define STR_ERR_VOL_NAME_LEN	"Volume name exceeds the maximum length of"
-#define STR_ERR_VOL_NAME_LEN2	"characters"
-#define STR_KS_TOO_OLD			"This program requires Kickstart 2.04 or higher"
-#define STR_OS_TOO_OLD			"This program requires AmigaOS 2.04 or higher"
+#define STR_ERR_INV_POINTER		"Invalid pointer"
+#define STR_ERR_INV_VOL_NAME	"Invalid volume name"
+#define STR_ERR_LOCK_DOS		"Failed to lock DOS list"
+#define STR_ERR_NEGATIVE_UPTIME	"Calculated uptime is negative. Please check that " \
+								"the system clock is set correctly or use the VOLUME " \
+								"option to check against a different volume."
+#define STR_ERR_VOL_NAME_LEN	"Volume name is too long"
 
 //--------------------------------------------------------------------------------
 // Command line template for ReadArgs
@@ -52,14 +56,15 @@ typedef enum OutFrmt {
 
 #define OPT_VERSION			0		// Show program version and exit
 #define OPT_VOLUME			1		// Volume to check (default: RAM Disk)
-#define OPT_FULL			2		// Full output (i.e. The system has been running for...)
-#define OPT_SHORT			3		// Short output (i.e. Uptime: DD:HH:MM:SS)
-#define OPT_NOPREFIX		4		// No prefix (i.e. DD:HH:MM:SS)
+#define OPT_FULL			2		// Full output
+#define OPT_SHORT			3		// Short output
+#define OPT_NOPREFIX		4		// No prefix
 #define OPT_COUNT 			5
 
 //--------------------------------------------------------------------------------
 // Constants
 //--------------------------------------------------------------------------------
+// If you change these, be sure to change the corresponding error string above also
 #define KICKSTART_MIN_VER	37		// Min Kickstart version required (37 = 2.04)
 #define OS_MIN_VER			37		// Min AmigaOS version required (37 = 2.04)
 
