@@ -41,4 +41,4 @@ located at `NDK:Include_H`.
 
 | Version | Description
 |:-------:|-----------------------------------------------
-| 37.1 (WIP)   | Initial version
+| 37.1    | Initial version
