@@ -26,5 +26,5 @@ releases/
 Uptime
 
 # Ignore test results
-test/
+tst/
 *results*
