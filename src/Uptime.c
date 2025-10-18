@@ -90,7 +90,6 @@ int main(void)
 
 	// Get the current date/time
 	today = DateStamp(today);
-
 	if (today == NULL) {
 		Printf("%s\n", STR_ERR_GET_CURR_TIME);
 		rc = RETURN_FAIL;
@@ -145,8 +144,8 @@ int main(void)
 
 exit:
 	// Free the argument list
-	if (rdargs)	FreeArgs(rdargs);
-	if (today)	free(today);
+	if (rdargs) FreeArgs(rdargs);
+	if (today) free(today);
 	if (creationDate) free(creationDate);
 
 	return rc;
@@ -160,9 +159,7 @@ exit:
 BOOL SanitizeVolumeName(char* cleanName, const char* dirtyName)
 {
 	// Validate parameters
-	if (dirtyName == NULL || strlen(dirtyName) == 0 || 
-		strlen(dirtyName) <= 0 || strlen(dirtyName) > MAX_VOL_NAME_LEN)
-	{
+	if (dirtyName == NULL || strlen(dirtyName) == 0 || strlen(dirtyName) > MAX_VOL_NAME_LEN) {
 		Printf("%s\n", STR_ERR_INV_VOL_NAME);
 		return FALSE;
 	}
@@ -286,7 +283,6 @@ struct DateStamp* GetVolumeCreationDate(STRPTR volumeName)
 	ULONG 	flags = LDF_VOLUMES | LDF_READ;
 
 	// Validate parameters
-	// TODO: Are there any other checks we should do here on the volume name?
 	if (volumeName == NULL) {
 		Printf("%s\n", STR_ERR_INV_VOL_NAME);
 		return NULL;
