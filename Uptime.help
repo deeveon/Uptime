@@ -1,6 +1,6 @@
     NAME
         Uptime - Prints the amount of time the system has been up
-        and running since it was last booted.
+        and running since it was booted.
 
     FORMAT
         Uptime [VERSION] [VOLUME] [FULL|SHORT] [NOPREFIX]
@@ -14,7 +14,7 @@
     FUNCTION
         Uptime is an AmigaOS command line utility that prints the
         amount of time the system has been up and running since it
-        was last booted.
+        was booted.
 
     OPTIONS
         The following options allow you to override the default
@@ -22,15 +22,15 @@
 
         VERSION or VER
             Outputs the program name, revision and revision date,
-            then exits.
+            then exits. Ignores any other options.
 
         VOLUME or VOL
             By default, Uptime uses the creation date/time of the
             'RAM Disk' volume as the basis for determining the
-            amount of time since last boot. If you have replaced
-            the standard AmigaOS RAM Disk with something else or
-            with a different volume name, you can use the VOLUME
-            option to use that instead.
+            amount of time since boot. If you have replaced the 
+			standard AmigaOS RAM Disk with something else or with
+			a different volume name, you can use the VOLUME option
+			to use that instead.
             
             You can get a list of volumes mounted on the system by
             using the AmigaOS INFO command.
@@ -45,7 +45,7 @@
 
         SHORT or S
             Outputs the uptime information in a shorter, more concise
-            format. e.g "Uptime: 02:16:58:34"
+            format. e.g "Uptime: 2d 16h 58m 34s"
 
         NOPREFIX or NP
             Outputs the uptime information without any leading text. 
@@ -60,7 +60,7 @@
         2) A shorter more concise output:
 
            1> Uptime SHORT
-           Uptime: 00:01:27:48
+           Uptime: 1h 27m 48s
 
         3) A more conversational style of output:
 
