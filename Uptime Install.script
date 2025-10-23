@@ -1,0 +1,268 @@
+;********************************************************************************
+;
+;	$VER: Uptime installer 37.1 (22/10/2025)
+;
+;	Copyright (c) 2025 Matthew Sawyer. All rights reserved.
+;
+;********************************************************************************
+
+;--------------------------------------------------------------------------------
+; 	Prerequisites
+;--------------------------------------------------------------------------------
+
+(set #min-ver-installer 47)
+(set #min-ver-os 47)
+
+; Check Installer version
+(set #installer-version (/ @installer-version 65536))
+(if (< #installer-version #min-ver-installer)
+	(abort ("This installation script requires Installer version %ld or better." #min-ver-installer))
+)
+
+; Check AmigaOS version
+(set #os-version (/ (getversion) 65536))
+(if (< #os-version #min-ver-os)
+	(abort "This installer only works with AmigaOS 3.2 (V47) or above.")
+)
+
+;--------------------------------------------------------------------------------
+; 	Install/Uninstall Selector
+;--------------------------------------------------------------------------------
+
+(set #install-type-msg
+	(cat "Welcome to %s.\n\n"
+		"%s is an AmigaOS command line utility that displays the amount of time "
+		"the system has been running since it was booted.\n\n"
+		"Select the desired installation type below."
+	)
+)
+
+; Ask user for install or uninstall
+(set #install-type
+	(askbool
+		(prompt (#install-type-msg @app-name @app-name))
+		(help ("Select 'Install' if you want to install %s.\nSelect 'Uninstall' if you want to remove it." @app-name))
+		(choices
+			"Install"
+			"Uninstall"
+		)
+		(default 1)
+	)
+)
+
+;================================================================================
+; 	Uninstall
+;================================================================================
+(if (= #install-type 0)
+	; TRUE
+	(
+		(if 
+			(askbool
+				(prompt ("Are you certain you want to remove %s from the system?" @app-name))
+				(help ("Please confirm whether or not you want to remove %s from the system." @app-name))
+				(default 1)
+			)
+			; TRUE
+			(
+				(delete "SYS:C/Uptime" (optional "force"))
+				(delete "HELP:english/Sys/Commands/Uptime.help" (optional "force"))
+
+				(set #done-msg
+					(cat "%s has been removed from the system.\n\n"
+						"If you previously installed the source code files, those have not "
+						"been removed. You must remove them manually."
+					)
+				)
+			)
+			; FALSE
+			(
+				(set #done-msg
+					(cat "%s has NOT been removed from the system.")
+				)
+			)
+		)
+		(message (#done-msg @app-name))
+		(exit (quiet))
+	)
+	; FALSE
+)
+
+;================================================================================
+; 	Install
+;================================================================================
+
+;--------------------------------------------------------------------------------
+; 	P_GetDirectory #path #space-needed #file-type #make-dir
+;
+;		#path			The default destination path (string)
+;		#space-needed	How much space (in Kb) on the destination drive is
+;						needed to fit all the files to be copied
+;		#file-type		A description of the type of files to copy (string)
+;		#make-dir		Whether or not the installer will make a new drawer in
+;						the selected destination (true/false)
+;--------------------------------------------------------------------------------
+(procedure P_GetDirectory #path #space-needed #file-type #make-dir
+	; Initialize available space variable
+	(set #space-avail 0)
+
+	; Loop until user selects a disk with enough space
+	(while (< #space-avail #space-needed)
+		(
+			(set #path
+				(askdir
+					; Will the installer create a drawer automatically?
+					(if #make-dir
+						(
+							(prompt ("Select the location where you would like the %s %s files copied to. A new drawer named '%s' will be created at that location." @app-name #file-type @app-name))
+							(help ("The installer needs to know the location where to copy the %s %s files. Please select your preferred location.\n\nNOTE: The installer will create a new drawer in the selected location and place the files in that new drawer."))
+						)
+						(
+							(prompt ("Select the location where you would like the %s %s files copied to." @app-name #file-type))
+							(help ("The installer needs to know the location where to copy the %s %s files. Please select your preferred location." @app-name #file-type))
+						)
+					)
+					(default #path)
+				)
+			)
+
+			; Expand the path to ensure we're getting the disk space of the correct volume
+			(set #path (expandpath #path))
+
+			; Check available space on selected disk
+			(set #space-avail (getdiskspace #path "K"))
+
+			; If not enough space, inform the user and add to the logfile
+			(if (< #space-avail #space-needed)
+				(
+					(message ("There is not enough space on the selected disk. Please free up some space or choose another location.\n\nRequired space: %ld kb\nFree space: %ld Kb" #space-needed #space-avail))
+					(transcript ("Not enough space on the selected disk.\nRequired space: %ld Kb\nFree space: %ld Kb" #space-needed #space-avail))
+				)
+			)
+		)
+	)
+
+	; Return the selected path
+	(set #retval #path)
+)
+
+;--------------------------------------------------------------------------------
+; 	Welcome
+;--------------------------------------------------------------------------------
+
+(set #welcome-msg 
+	(cat "Welcome to the %s installer.\n\n"
+		"This installer will copy the %s executable and associated help file "
+		"to the appropriate locations on your system."
+	)
+)
+
+; Display the welcome message
+(welcome (#welcome-msg @app-name @app-name))
+
+(complete 0)
+
+;--------------------------------------------------------------------------------
+;	Executable files (Expert only)
+;--------------------------------------------------------------------------------
+
+(set #exe-file "Uptime")
+(set #exe-dir "SYS:C")
+(set #exe-space-needed 10)
+
+; Ask for executable location if Expert
+(if (= @user-level 2)
+	(set #exe-dir (P_GetDirectory #exe-dir #exe-space-needed "executable" 0))
+)
+
+(complete 25)
+
+;--------------------------------------------------------------------------------
+; 	Help files (Expert only)
+;--------------------------------------------------------------------------------
+
+(set #help-file "Uptime.help")
+(set #help-dir "HELP:english/sys/commands")
+(set #help-space-needed 10)
+
+; Ask for help file location if Expert
+(if (= @user-level 2)
+	(set #help-dir (P_GetDirectory #help-dir #help-space-needed "help" 0))
+)
+
+(complete 50)
+
+;--------------------------------------------------------------------------------
+; 	Source files (Average + Expert)
+;--------------------------------------------------------------------------------
+
+(set #source-files "src")
+(set #source-dir "Work:Dev/Source/Uptime")
+(set #source-space-needed 30)
+
+; Ask if user wants to install the source code files (if user is Average or Expert)
+(if (>= @user-level 1)
+	(if 
+		(askbool
+			(prompt ("Would you like to install the %s source code files also?" @app-name))
+			(help ("Please confirm whether or not you want to copy the %s source code files to the system." @app-name))
+			(default 1)
+		)
+		; TRUE
+		(
+			(set #install-source-files 1)
+			(set #source-dir (P_GetDirectory #source-dir #source-space-needed "source code" 1))
+			(transcript ("\nSource dir: %s" #source-dir))
+		)
+		; FALSE
+		(
+			(set #install-source-files 0)
+		)
+	)
+)
+
+(complete 75)
+
+;--------------------------------------------------------------------------------
+; 	Make the magic happen
+;--------------------------------------------------------------------------------
+
+; Copy the executable
+(copyfiles
+	(prompt ("Copying the % executable file to: %s" @app-name #exe-dir))
+	(help ("This will copy the executable file to the selected directory."))
+	(source #exe-file)
+	(dest #exe-dir)
+)
+
+; Copy the help file
+(copyfiles
+	(prompt ("Copying the % help file to: %s" @app-name #help-dir))
+	(help ("This will copy the help file to the selected directory."))
+	(source #help-file)
+	(dest #help-dir)
+)
+
+; Copy the source files
+(if #install-source-files
+	(copyfiles
+		(prompt ("Copying the % source code files to: %s" @app-name #help-dir))
+		(help ("This will copy the source code file to the selected directory."))
+		(source #source-files)
+		(dest (tackon #source-dir @app-name))
+		(all)
+	)
+)
+
+(complete 100)
+
+;--------------------------------------------------------------------------------
+; 	Exit message
+;--------------------------------------------------------------------------------
+
+(message ("%s has been successfully installed to your system." @app-name))
+
+(exit (quiet))
+
+;================================================================================
+;	End of Uptime installation script
+;================================================================================
